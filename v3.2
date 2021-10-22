@@ -1,12 +1,12 @@
 //@version=4
-strategy(overlay=true, title="FP ML L/S ICP v3.0", default_qty_type = strategy.percent_of_equity, initial_capital = 100000, default_qty_value = 100, pyramiding = 0, commission_type=strategy.commission.percent, commission_value=0.04)
+strategy(overlay=true, title="FP ML L/S ICP v3.2", default_qty_type = strategy.percent_of_equity, initial_capital = 100000, default_qty_value = 100, pyramiding = 0, commission_type=strategy.commission.percent, commission_value=0.04)
 
 ////////// ** Inputs ** //////////
 
 // Date Range
 start_date = input(title="Start Date", type=input.integer, defval=1, minval=1, maxval=31, group="Date Range")
-start_month = input(title="Start Month", type=input.integer, defval=1, minval=1, maxval=12, group="Date Range")
-start_year = input(title="Start Year", type=input.integer, defval=1804, minval=1800, maxval=3000, group="Date Range")
+start_month = input(title="Start Month", type=input.integer, defval=9, minval=1, maxval=12, group="Date Range")
+start_year = input(title="Start Year", type=input.integer, defval=2021, minval=1800, maxval=3000, group="Date Range")
 end_date = input(title="End Date", type=input.integer, defval=1, minval=1, maxval=31, group="Date Range")
 end_month = input(title="End Month", type=input.integer, defval=1, minval=1, maxval=12, group="Date Range")
 end_year = input(title="End Year", type=input.integer, defval=2077, minval=1800, maxval=3000, group="Date Range")
@@ -16,16 +16,16 @@ in_date_range = (time >= timestamp(syminfo.timezone, start_year, start_month, st
 
 // Enable Long Strategy
 enable_long_strategy = input(true, title="Enable Long Strategy", group="SL/TP For Long Strategy",inline="1")
-long_stoploss_value = input(defval=5.482, title='Stoploss %', type=input.float, minval=0.1, step=0.2, group="SL/TP For Long Strategy",inline="2")
+long_stoploss_value = input(defval=3.882, title='Stoploss %', type=input.float, minval=0.1, step=0.2, group="SL/TP For Long Strategy",inline="2")
 long_stoploss_percentage = (close * (long_stoploss_value / 100)) / syminfo.mintick
-long_takeprofit_value = input(defval=7.937, title='Take Profit %', type=input.float, minval=0.1, step=0.2, group="SL/TP For Long Strategy",inline="2")
+long_takeprofit_value = input(defval=1.737, title='Take Profit %', type=input.float, minval=0.1, step=0.2, group="SL/TP For Long Strategy",inline="2")
 long_takeprofit_percentage = (close * (long_takeprofit_value / 100)) / syminfo.mintick
 
 // Enable Short Strategy
 enable_short_strategy = input(true, title="Enable Short Strategy", group="SL/TP For Short Strategy",inline="3")
-short_stoploss_value = input(defval=1.4, title='Stoploss %', type=input.float, minval=0.1, step=0.2, group= "SL/TP For Short Strategy",inline="4")
+short_stoploss_value = input(defval=4.0, title='Stoploss %', type=input.float, minval=0.1, step=0.2, group= "SL/TP For Short Strategy",inline="4")
 short_stoploss_percentage = (close * (short_stoploss_value / 100)) / syminfo.mintick
-short_takeprofit_value = input(defval=4.0, title='Take Profit %', type=input.float, minval=0.1, step=0.2, group="SL/TP For Short Strategy",inline="4")
+short_takeprofit_value = input(defval=1.8, title='Take Profit %', type=input.float, minval=0.1, step=0.2, group="SL/TP For Short Strategy",inline="4")
 short_takeprofit_percentage = (close * (short_takeprofit_value / 100)) / syminfo.mintick
 
 
@@ -43,7 +43,7 @@ plot(strategy.position_size >= 0 ? na : short_takeprofit_price, color=color.gree
 
 // RSI
 
-rsiInput = input(11,title="RSI")
+rsiInput = input(7,title="RSI")
 len = rsiInput
 src = close
 up = rma(max(change(src), 0), len)
@@ -52,7 +52,7 @@ rsi = down == 0 ? 100 : up == 0 ? 0 : 100 - 100 / (1 + up / down)
 
 // MFI
 
-mfiInput = input(3,title="MFI")
+mfiInput = input(6,title="MFI")
 MFIlength = mfiInput
 MFIsrc = hlc3
 MFIupper = sum(volume * (change(MFIsrc) <= 0 ? 0 : MFIsrc), MFIlength)
@@ -68,7 +68,7 @@ mfi = _rsi(MFIupper, MFIlower)
 // Bollinger Bands
 
 bbandLength = input(6, title="BBand")
-bbandMultiple = input(1.5, step=0.05, title="BBand Multiple")
+bbandMultiple = input(1.45, step=0.05, title="BBand Multiple")
 length1 = bbandLength
 src1 = close
 mult1 = bbandMultiple
@@ -79,24 +79,24 @@ lower1 = basis1 - dev1
 
 
 // BBand Wdith
-BBWlength = input(92, minval=1, title="BBW Length")
-BBWmult = input(2.0, minval=0.001, maxval=50, step=0.2, title="BBW StdDev")
+BBWlength = input(97, minval=1, title="BBW Length")
+BBWmult = input(1.6, minval=0.001, maxval=50, step=0.2, title="BBW StdDev")
 BBWbasis = sma(close, BBWlength)
 BBWdev = BBWmult * stdev(close, BBWlength)
 BBWupper = BBWbasis + BBWdev
 BBWlower = BBWbasis - BBWdev
 bbw = (BBWupper-BBWlower)/BBWbasis
-BBWFilter= input(0.04, minval=0.01, step=0.002, title="BBW Filter")
+BBWFilter= input(0.048, minval=0.01, step=0.002, title="BBW Filter")
 
 
 ////////// ** Triggers and Guards ** //////////
 
 // Strategy Parameters
 
-MFILowerLevel3 = input(34, title="MFI Lower Level 3")
-RSILowerLevel3 = input(49, title="RSI Lower Level 3")
-MFIUpperLevel3 = input(58, title="MFI Upper Level 3")
-RSIUpperLevel3 = input(50, title="RSI Upper Level 3")
+MFILowerLevel3 = input(31, title="MFI Lower Level 3")
+RSILowerLevel3 = input(46, title="RSI Lower Level 3")
+MFIUpperLevel3 = input(68, title="MFI Upper Level 3")
+RSIUpperLevel3 = input(51, title="RSI Upper Level 3")
 
 BBBuyTrigger3 = src1 < lower1
 BBSellTrigger3 = src1 > upper1
@@ -114,7 +114,7 @@ rsiSellGuard3 = rsi > RSIUpperLevel3
 buy_signal = BBBuyTrigger3 and mfiBuyGuard3 and rsiBuyGuard3 and bbw>BBWFilter
 sell_signal = BBSellTrigger3 and mfiSellGuard3 and rsiSellGuard3 and bbw>BBWFilter
 closeBuy_signal = BBSellTrigger3 and mfiSellGuard3
-closeSell_signal = BBBuyTrigger3 and mfiBuyGuard3
+closeSell_signal =BBBuyTrigger3 and mfiBuyGuard3
 
 // Long Strategy
 if buy_signal and in_date_range and enable_long_strategy == true
